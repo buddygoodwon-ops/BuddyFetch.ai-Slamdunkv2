@@ -31,6 +31,27 @@ const SOURCE_BY_INBOX = {
   139833: 'birdrockcommercial.com',
   139834: 'birdrockmanagement.com',
 };
+// Phone-only tools that must NEVER be offered in a text/chat channel (Kate spec 10/10).
+const PHONE_ONLY_TOOLS = new Set([
+  '891f24cb-cfae-42a7-915b-3c2ea52d8a78', // transfer_to_live_agent
+  'df23f6e2-48f7-411b-9bbc-f1df4b133669', // leave_birdrock_voicemail
+  'eca43747-3dea-4ddf-ab8e-927617723d2f', // leave_abl_voicemail
+]);
+let TEXT_TOOL_CACHE = {}; // assistantId -> { toolIds, provider, model, at }
+async function textToolIds(assistantId, apiKey) {
+  const c = TEXT_TOOL_CACHE[assistantId];
+  if (c && Date.now() - c.at < 30 * 60 * 1000) return c.ids;
+  try {
+    const r = await fetch('https://api.vapi.ai/assistant/' + assistantId, { headers: { Authorization: 'Bearer ' + apiKey } });
+    const a = await r.json();
+    if (a && a.model && Array.isArray(a.model.toolIds)) {
+      const ids = a.model.toolIds.filter((id) => !PHONE_ONLY_TOOLS.has(id));
+      TEXT_TOOL_CACHE[assistantId] = { ids, at: Date.now() };
+      return ids;
+    }
+  } catch { /* best effort */ }
+  return null;
+}
 // ProProcessing.online assistant repurposed for SlamDunk website chat on 2026-09-07.
 // Keep this as a code fallback while the Pages secret is updated, so a stale
 // VAPI_ASSISTANT_ID cannot silently route visitors to the old BirdRock agent.
@@ -246,6 +267,7 @@ async function processMessage(env, message, conversationId, externalHeaders = nu
       // Route each brand's chat to that brand's VAPI assistant.
       assistantId: assignedAssistant,
       input: items,
+      ...(await (async () => { const tt = await textToolIds(assignedAssistant, VAPI_API_KEY); return tt ? { assistantOverrides: { model: { provider: tt.provider, model: tt.model, toolIds: tt.toolIds } } } : {}; })()),
     }),
   });
   const vapiData = await vapiRes.json().catch(() => null);
