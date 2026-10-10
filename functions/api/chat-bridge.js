@@ -174,6 +174,21 @@ async function processMessage(env, message, conversationId, externalHeaders = nu
   if (!VAPI_API_KEY || !CHATWOOT_ACCOUNT_ID) {
     return json({ ok: false, error: 'bridge not configured' }, 500);
   }
+  // Unified person-memory (Kate 10/10/2026): resolve this visitor's ids BEFORE Kate speaks.
+  // Stable web key = Chatwoot contact id (persists per browser widget across conversations);
+  // attach email/phone when the visitor has shared them so web memory merges with phone/SMS.
+  let memMarker = '';
+  try {
+    const convRes = await chatwootApi(env, `/conversations/${conversationId}`, {}, externalHeaders);
+    if (convRes.ok) {
+      const conv = (await convRes.json()) || {};
+      const contact = conv.payload?.contact || conv.contact || {};
+      const ids = [`web:visitor_cwcontact_${contact.id || 'unknown'}`];
+      if (contact.email) ids.push(`email:${String(contact.email).toLowerCase()}`);
+      if (contact.phone_number) ids.push(String(contact.phone_number));
+      memMarker = `[MEM-ID ${ids.join('; ')}]`;
+    }
+  } catch { /* memory marker is best-effort; chat continues without it */ }
   // 1) Pull conversation history from Chatwoot (visitor + agent text messages)
   const histRes = await chatwootApi(env, `/conversations/${conversationId}/messages`, {}, externalHeaders);
   if (!histRes.ok) {
@@ -195,6 +210,14 @@ async function processMessage(env, message, conversationId, externalHeaders = nu
 
   if (!items.length || items[items.length - 1].role !== 'user') {
     items.push({ role: 'user', content: String(message.content).slice(0, 2000) });
+  }
+  // Tag the CURRENT turn with the visitor's memory ids (kept out of the Chatwoot history;
+  // only injected into the VAPI input so load/save_person_memory keys on a stable id).
+  if (memMarker) {
+    const last = items[items.length - 1];
+    if (last.role === 'user' && !last.content.includes('[MEM-ID')) {
+      last.content = `${memMarker}\n\n${last.content}`;
+    }
   }
 
   // 2) Ask the VAPI Buddy Chat Agent
