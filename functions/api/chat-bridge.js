@@ -24,6 +24,13 @@ const INBOX_ASSISTANTS = {
   139833: '5eabf5c1-af1f-42cc-b51e-26e1fb704b35', // BirdRock Commercial → Buddy BirdRock Commercial
   139834: 'f17d5e8f-ef94-4721-87c6-b2f529e3d3e0', // BirdRock Management → Lorne Goodwon BRM Property Management
 };
+// Human-readable source label per inbox (Kate spec 10/10: visible channel/source tags).
+const SOURCE_BY_INBOX = {
+  133705: 'slamdunktechnologies.com',
+  139577: 'americasbestlenders.com',
+  139833: 'birdrockcommercial.com',
+  139834: 'birdrockmanagement.com',
+};
 // ProProcessing.online assistant repurposed for SlamDunk website chat on 2026-09-07.
 // Keep this as a code fallback while the Pages secret is updated, so a stale
 // VAPI_ASSISTANT_ID cannot silently route visitors to the old BirdRock agent.
@@ -178,15 +185,20 @@ async function processMessage(env, message, conversationId, externalHeaders = nu
   // Stable web key = Chatwoot contact id (persists per browser widget across conversations);
   // attach email/phone when the visitor has shared them so web memory merges with phone/SMS.
   let memMarker = '';
+  let channelTag = `[CHANNEL WEB_CHAT - this is a WEBSITE CHAT from ${SOURCE_BY_INBOX[inboxId] || 'a website'}. Not a phone call, not SMS, not email. Capabilities: text replies, links, tools that send chat/SMS/email. You CANNOT transfer a call here - if they need a human/call, offer a callback or take a message instead.]`;
   try {
     const convRes = await chatwootApi(env, `/conversations/${conversationId}`, {}, externalHeaders);
     if (convRes.ok) {
       const conv = (await convRes.json()) || {};
       const contact = conv.payload?.contact || conv.contact || {};
       const ids = [`web:visitor_cwcontact_${contact.id || 'unknown'}`];
+      let visitorId = 'unknown';
       if (contact.email) ids.push(`email:${String(contact.email).toLowerCase()}`);
       if (contact.phone_number) ids.push(String(contact.phone_number));
+      visitorId = `web:visitor_cwcontact_${contact.id || 'unknown'}`;
       memMarker = `[MEM-ID ${ids.join('; ')}]`;
+      // Channel tag (Kate spec 10/10): tell Kate this is a WEB CHAT, not SMS/email/call.
+      channelTag = `[CHANNEL WEB_CHAT - this is a WEBSITE CHAT from ${SOURCE_BY_INBOX[inboxId] || 'a website'} (visitor: ${visitorId}). Not a phone call, not SMS, not email. Capabilities: text replies, links, tools that send chat/SMS/email. You CANNOT transfer a call here - if they need a human/call, offer a callback or take a message instead.]`;
     }
   } catch { /* memory marker is best-effort; chat continues without it */ }
   // 1) Pull conversation history from Chatwoot (visitor + agent text messages)
@@ -213,10 +225,13 @@ async function processMessage(env, message, conversationId, externalHeaders = nu
   }
   // Tag the CURRENT turn with the visitor's memory ids (kept out of the Chatwoot history;
   // only injected into the VAPI input so load/save_person_memory keys on a stable id).
-  if (memMarker) {
+  const tags = [];
+  if (channelTag) tags.push(channelTag);
+  if (memMarker) tags.push(memMarker);
+  if (tags.length) {
     const last = items[items.length - 1];
-    if (last.role === 'user' && !last.content.includes('[MEM-ID')) {
-      last.content = `${memMarker}\n\n${last.content}`;
+    if (last.role === 'user' && !last.content.includes('[CHANNEL ')) {
+      last.content = `${tags.join('\n')}\n\n${last.content}`;
     }
   }
 
