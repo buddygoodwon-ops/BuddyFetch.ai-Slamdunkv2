@@ -220,6 +220,19 @@ async function processMessage(env, message, conversationId, externalHeaders = nu
       memMarker = `[MEM-ID ${ids.join('; ')}]`;
       // Channel tag (Kate spec 10/10): tell Kate this is a WEB CHAT, not SMS/email/call.
       channelTag = `[CHANNEL WEB_CHAT - this is a WEBSITE CHAT from ${SOURCE_BY_INBOX[inboxId] || 'a website'} (visitor: ${visitorId}). Not a phone call, not SMS, not email. Capabilities: text replies, links, tools that send chat/SMS/email. You CANNOT transfer a call here - if they need a human/call, offer a callback or take a message instead.]`;
+      // Human-visible channel label (Kate spec 10/10): tag the Chatwoot conversation once so
+      // Glenn/Travis instantly see this is a WEB CHAT, its source, and the visitor id.
+      try {
+        const srcLabel = SOURCE_BY_INBOX[inboxId] || 'website';
+        const labels = (conv.payload && conv.payload.labels) || conv.labels || [];
+        if (!labels.includes('channel:web_chat')) {
+          await chatwootApi(env, `/conversations/${conversationId}/labels`, { method: 'POST', body: JSON.stringify({ labels: ['channel:web_chat', `source:${srcLabel}`] }) }, externalHeaders);
+          await chatwootApi(env, `/conversations/${conversationId}/messages`, { method: 'POST', body: JSON.stringify({ content: `Channel: Web Chat
+Source: ${srcLabel}
+Visitor: ${visitorId}
+Display: Kate - Web Chat - ${srcLabel} - ${visitorId}`, message_type: 'outgoing', private: true }) }, externalHeaders);
+        }
+      } catch { /* label is best-effort */ }
     }
   } catch { /* memory marker is best-effort; chat continues without it */ }
   // 1) Pull conversation history from Chatwoot (visitor + agent text messages)
