@@ -191,13 +191,14 @@ export async function onRequestPost(context) {
       'access-token': context.request.headers.get('x-cw-token') || null,
     };
     const hasExternal = Boolean(externalHeaders.uid && externalHeaders.client && externalHeaders['access-token']);
-    return await processMessage(context.env, message, conversationId, hasExternal ? externalHeaders : null, assignedAssistant);
+    const routedInboxId = inboxId || (payload.inbox?.id || payload.data?.inbox?.id || null);
+    return await processMessage(context.env, message, conversationId, hasExternal ? externalHeaders : null, assignedAssistant, routedInboxId);
   } catch (e) {
     return json({ ok: false, error: `bridge: ${e && e.message ? e.message : String(e)}` }, 502);
   }
 }
 
-async function processMessage(env, message, conversationId, externalHeaders = null, assignedAssistant = SLAMDUNK_CHAT_ASSISTANT_ID) {
+async function processMessage(env, message, conversationId, externalHeaders = null, assignedAssistant = SLAMDUNK_CHAT_ASSISTANT_ID, inboxId = null) {
   const { VAPI_API_KEY, CHATWOOT_ACCOUNT_ID } = env;
   if (!VAPI_API_KEY || !CHATWOOT_ACCOUNT_ID) {
     return json({ ok: false, error: 'bridge not configured' }, 500);
