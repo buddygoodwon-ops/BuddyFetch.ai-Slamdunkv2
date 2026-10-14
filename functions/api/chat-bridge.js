@@ -37,17 +37,18 @@ const PHONE_ONLY_TOOLS = new Set([
   'df23f6e2-48f7-411b-9bbc-f1df4b133669', // leave_birdrock_voicemail
   'eca43747-3dea-4ddf-ab8e-927617723d2f', // leave_abl_voicemail
 ]);
-let TEXT_TOOL_CACHE = {}; // assistantId -> { toolIds, provider, model, at }
+let TEXT_TOOL_CACHE = {}; // assistantId -> { ids, provider, model, at }
 async function textToolIds(assistantId, apiKey) {
   const c = TEXT_TOOL_CACHE[assistantId];
-  if (c && Date.now() - c.at < 30 * 60 * 1000) return c.ids;
+  if (c && Date.now() - c.at < 30 * 60 * 1000) return c; // full entry, not just ids
   try {
     const r = await fetch('https://api.vapi.ai/assistant/' + assistantId, { headers: { Authorization: 'Bearer ' + apiKey } });
     const a = await r.json();
     if (a && a.model && Array.isArray(a.model.toolIds)) {
       const ids = a.model.toolIds.filter((id) => !PHONE_ONLY_TOOLS.has(id));
-      TEXT_TOOL_CACHE[assistantId] = { ids, at: Date.now() };
-      return ids;
+      const entry = { ids, provider: a.model.provider, model: a.model.model, at: Date.now() };
+      TEXT_TOOL_CACHE[assistantId] = entry;
+      return entry;
     }
   } catch { /* best effort */ }
   return null;
@@ -281,7 +282,15 @@ Display: Kate - Web Chat - ${srcLabel} - ${visitorId}`, message_type: 'outgoing'
       // Route each brand's chat to that brand's VAPI assistant.
       assistantId: assignedAssistant,
       input: items,
-      ...(await (async () => { const tt = await textToolIds(assignedAssistant, VAPI_API_KEY); return tt ? { assistantOverrides: { model: { provider: tt.provider, model: tt.model, toolIds: tt.toolIds } } } : {}; })()),
+      ...(await (async () => {
+        const tt = await textToolIds(assignedAssistant, VAPI_API_KEY);
+        // Only send the override when we have a COMPLETE model (provider+model+ids).
+        // A partial model (e.g. {}) makes VAPI /chat return HTTP 400.
+        if (tt && Array.isArray(tt.ids) && tt.provider && tt.model) {
+          return { assistantOverrides: { model: { provider: tt.provider, model: tt.model, toolIds: tt.ids } } };
+        }
+        return {};
+      })()),
     }),
   });
   const vapiData = await vapiRes.json().catch(() => null);
