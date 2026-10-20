@@ -106,7 +106,7 @@ future_html = second_home.replace('{{CUSTOM_FEATURES}}', feature_list(custom_fea
 # 2) The 4 standard bullet pages (side list = other 4 main bullets only)
 for filename, title, heading, lead in pages:
     values = {'TITLE': title, 'DESCRIPTION': re.sub(r'<[^>]+>', '', lead), 'HEADING': heading, 'LEAD': lead,
-              'CTA_TEXT': 'Book a Demo', 'CTA_HREF': 'https://calendly.com/glenn-wilbor-birdrockfunding/30min',
+              'CTA_TEXT': 'Book a Demo', 'CTA_HREF': 'book-a-demo.html',
               'BACK_HREF': 'index.html', 'BACK_LABEL': 'Back to home', 'LIST_LABEL': '',
               'HEADING_CLASS': 'heading-wide' if filename == 'distribution.html' else '',
               'FEATURES': feature_list(main_features, active_main=filename, exclude_active=True),
@@ -117,7 +117,7 @@ for filename, title, heading, lead in pages:
 for filename, title, heading, lead in future_pages:
     values = {'TITLE': title, 'DESCRIPTION': re.sub(r'<[^>]+>', '', lead), 'HEADING': heading, 'LEAD': lead,
               'CTA_TEXT': 'Say Hi to Buddy now!' if filename == 'avatar-app.html' else 'Book a Demo',
-              'CTA_HREF': 'https://buddyfetch.ai/slamdunk' if filename == 'avatar-app.html' else 'https://calendly.com/glenn-wilbor-birdrockfunding/30min',
+              'CTA_HREF': 'https://buddyfetch.ai/slamdunk' if filename == 'avatar-app.html' else 'book-a-demo.html',
               'BACK_HREF': 'index.html', 'BACK_LABEL': 'Back to home',
               'LIST_LABEL': 'THE BEGINNING',
               'HEADING_CLASS': 'heading-wide mcp-heading' if filename == 'mcp-server.html' else ('heading-wide' if filename == 'distribution.html' else ''),
