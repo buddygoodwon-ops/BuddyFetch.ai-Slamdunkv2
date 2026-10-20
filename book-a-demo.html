@@ -13,9 +13,12 @@
   
 
   <style>
-    /* Phones/tablets: calendar on top, text below */
+    /* Phones/tablets: logo on top, then calendar, then text */
     @media (max-width: 980px) {
       .hero-photo-frame { order: -1; min-height: 1000px !important; height: 1000px; margin-bottom: 24px; border-radius: 16px; }
+      .hero-copy { display: contents; }
+      .hero-copy > .brand { order: -2; margin-bottom: 20px; }
+      .hero-copy > *:not(.brand) { margin-bottom: 20px; }
     }
   </style>
   <div class="page">
