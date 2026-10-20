@@ -34,6 +34,8 @@ Swipe left = next page, swipe right = previous page. */
  function go(delta) {
     var cur = normalize(currentPage());
     var i = NORM_ORDER.indexOf(cur);
+    if (cur === "book-a-demo") { location.href = delta < 0 ? "index.html" : "future.html"; return; }
+    if (cur === "index" && delta < 0) { location.href = "future.html"; return; }
     if (i === -1) return;
     var next = ORDER[i + delta];
     if (next && normalize(next) !== cur) {
