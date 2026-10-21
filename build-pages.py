@@ -28,12 +28,12 @@ custom_features = [
    svg('<path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z"/><path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z"/><path d="M12 5v13"/>')),
   ('distribution.html', 'Distribution of Intelligence', 'Delegated Permission Authority.',
    svg('<circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="6" r="2"/><circle cx="18" cy="18" r="2"/><path d="M8.2 11l7.6-4M8.2 13l7.6 4"/>')),
-  ('virtual-mascot.html', 'Custom Virtual Company Mascot', 'Unique and Fun Interactions.',
+  ('virtual-mascot.html', 'Custom Virtual Company Mascot', 'Unique and Fun Live Chat sessions.',
    svg('<circle cx="12" cy="12" r="9"/><path d="M9 10h.01"/><path d="M15 10h.01"/><path d="M8.5 14a5 5 0 0 0 7 0"/>')),
-  ('avatar-app.html', 'AI Avatar App', 'Managed BuddyFetch AIs through LIVE app.',
-   svg('<rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/>')),
   ('mcp-server.html', 'MCP Server Conversion of Website', 'Allows AI to interact with your Website.',
    svg('<circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a15 15 0 0 1 0 18 15 15 0 0 1 0-18"/>')),
+  ('avatar-app.html', 'AI Avatar App', 'Managed BuddyFetch AIs through LIVE app.',
+   svg('<rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/>')),
 ]
 
 # --- The 4 original bullet pages (future.html is the Second Home, built separately) ---
