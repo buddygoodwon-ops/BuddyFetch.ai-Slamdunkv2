@@ -69,7 +69,7 @@ body.live .lc-card{padding-top:calc(env(safe-area-inset-top) + 12px);}
 <div class="lc-card">
   <div id="promo-main">
     <p class="eyebrow"><a id="brand-link" href="/">SlamDunk Technologies</a></p>
-    <div class="frame"><img id="avatar-img" src="/assets/livechat/ginger-avatar-hero.jpg" alt="Avatar - tap to start Live Chat"/><button type="button" class="pill" id="yap-pill">Let's Yap!&nbsp;&nbsp;Click me.</button></div>
+    <div class="frame"><img id="avatar-img" src="/assets/livechat/buddy-avatar-cartoon.jpg" alt="Avatar - tap to start Live Chat"/><button type="button" class="pill" id="yap-pill">Let's Yap!&nbsp;&nbsp;Click me.</button></div>
     <h1>Your Virtual Mascot<br>Your Company Brain<br>Fetching Real Tasks</h1>
     <p id="promo-text">Your Company's Window into your AI powered custom Virtual Mascot, Brand Ambassador or Digital Double to access your Company's Brain powered by Agentic AI OpenClaw. You and your Employees can access all your company's knowledge base and then assign real tasks, jobs, and workflows for it to do. We build this custom for your business!</p>
     <a class="btn btn-primary" id="btn-ambassador" href="https://www.buddyfetch.ai/ginger">Brand Ambassador</a>
@@ -86,16 +86,16 @@ body.live .lc-card{padding-top:calc(env(safe-area-inset-top) + 12px);}
     <button id="lk-end" type="button">End Chat</button>
   </div>
 </div>
-<lemon-slice-widget id="ls-widget" agent-id="agent_150ea2643ffc45a6" inline="" custom-minimized-width="200" custom-minimized-height="300" custom-active-width="320" custom-active-height="520" video-button-color-opacity="0.88" show-minimize-button="true" initial-state="minimized"></lemon-slice-widget><script type="module" src="https://unpkg.com/@lemonsliceai/lemon-slice-widget"></script><script src="https://cdn.jsdelivr.net/npm/livekit-client@2/dist/livekit-client.umd.min.js"></script>
+<lemon-slice-widget id="ls-widget" agent-id="agent_70dc8e96528c845e" inline="" custom-minimized-width="200" custom-minimized-height="300" custom-active-width="320" custom-active-height="520" video-button-color-opacity="0.88" show-minimize-button="true" initial-state="minimized"></lemon-slice-widget><script type="module" src="https://unpkg.com/@lemonsliceai/lemon-slice-widget"></script><script src="https://cdn.jsdelivr.net/npm/livekit-client@2/dist/livekit-client.umd.min.js"></script>
 <script>
 /* ===== Per-site settings: change these to reuse Live Chat on another site ===== */
 var LIVECHAT={
   brand:'SlamDunk Technologies',
   brandHref:'/',
-  name:'Ginger',                                 /* what the avatar is called in the UI (Buddy: 'Buddy') */
-  image:'/assets/livechat/ginger-avatar-hero.jpg',  /* Buddy: /assets/livechat/buddy-avatar-cartoon.jpg */
-  lemonAgentId:'agent_150ea2643ffc45a6',          /* Lemon Slice avatar agent (Ginger) - same as buddyfetch.ai/ginger */
-  room:'ginger-demo',                            /* Ginger's LiveKit room - same as the LIVE buddyfetch.ai/ginger (Buddy: buddy-demo) */
+  name:'Buddy',                                  /* what the avatar is called in the UI */
+  image:'/assets/livechat/buddy-avatar-cartoon.jpg', /* Ginger: /assets/livechat/ginger-avatar-hero.jpg */
+  lemonAgentId:'agent_70dc8e96528c845e',          /* LemonSlice "Buddy SlamDunk Technologies" (Ginger: agent_150ea2643ffc45a6) */
+  room:'slamdunk-demo',                          /* Buddy SlamDunk bridge room - run-slamdunk-bridge.ps1 (Ginger: ginger-demo) */
   tokenUrl:'https://www.buddyfetch.ai/api/start', /* same LiveKit token call buddyfetch.ai/ginger Fetch Mode uses (read-only, CORS open) */
   askUrl:'/api/library-ask',                     /* POST {message,history} -> {reply} */
   dataTopic:'',                                  /* Ginger's bridge has no typed-text channel: typed chat goes straight to askUrl (Buddy: 'buddy-library') */
