@@ -41,12 +41,13 @@ body.avatar-hidden #boring-bubble{position:static;transform:none;margin:0 auto;}
 #mode-bar button[data-mode="silent"] svg{transform:scale(1.365);}
 #mode-bar button.on{background:var(--grad);color:#fff;}
 #mode-hint{color:var(--muted);font-size:12px;margin:0 0 8px;min-height:16px;}
-#chat-log{max-height:240px;overflow-y:auto;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:10px;margin:0 0 8px;font-size:14px;line-height:1.45;text-align:left;}
-#chat-log:empty::before{content:attr(data-empty);color:var(--muted);font-style:italic;opacity:.8;}
-.chat-msg{margin:0 0 8px;padding:8px 10px;border-radius:12px;white-space:pre-wrap;word-wrap:break-word;}
-.chat-you{background:var(--slate);color:#fff;margin-left:28px;}
-.chat-bot{background:#e9ecf7;color:#141a33;margin-right:28px;}
-.chat-pending{background:transparent;color:var(--muted);font-style:italic;}
+#chat-log{min-height:46px;max-height:240px;overflow-y:auto;background:#e4e6eb;border:none;border-radius:23px;padding:12px 14px;margin:8px 0 0;font-size:15px;line-height:1.45;text-align:left;color:#000;}
+#chat-log:empty::before{content:attr(data-empty);color:#000;}
+.chat-msg{margin:0 0 8px;padding:8px 12px;border-radius:16px;white-space:pre-wrap;word-wrap:break-word;}
+.chat-you{background:#cfd2d9;color:#000;margin-left:28px;}
+.chat-bot{background:transparent;color:#000;padding-left:0;padding-right:0;}
+.chat-msg:last-child{margin-bottom:0;}
+.chat-pending{background:transparent;color:#000;font-style:italic;padding:0;}
 #chat-form{display:flex;gap:6px;}
 #chat-input{flex:1;min-width:0;padding:12px 14px;border-radius:999px;border:1px solid var(--line);font-size:16px;background:#fff;color:#141a33;}
 #chat-send{padding:0 18px;border-radius:999px;border:none;background:var(--grad);color:#fff;font-weight:700;font-size:15px;cursor:pointer;}
@@ -77,8 +78,8 @@ body.live .lc-card{padding-top:calc(env(safe-area-inset-top) + 12px);}
     <div id="lk-status">Connecting...</div>
     <div id="mode-bar"><button type="button" data-mode="voice"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2.5" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3.5"/><path d="M8.5 21.5h7"/></svg><span>Voice</span></button><button type="button" data-mode="library"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 6.5C10 5 7 4.5 3 5v13.5c4-.5 7 0 9 1.5"/><path d="M12 6.5c2-1.5 5-2 9-1.5v13.5c-4-.5-7 0-9 1.5"/><path d="M12 6.5V20"/></svg><span>Library</span></button><button type="button" data-mode="silent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M16 9.5l5 5"/><path d="M21 9.5l-5 5"/></svg><span>Silent</span></button></div>
     <div id="mode-hint"></div>
-    <div id="chat-log" aria-live="polite"></div>
     <form id="chat-form" autocomplete="off"><input id="chat-input" type="text" enterkeyhint="send"/><button id="chat-send" type="submit">Send</button></form>
+    <div id="chat-log" aria-live="polite"></div>
     <label id="lib-vol">Whisper volume <input id="lib-vol-range" type="range" min="1" max="40" value="8"/></label>
     <button id="lk-end" type="button">End Chat</button>
   </div>
@@ -107,8 +108,8 @@ var C=LIVECHAT,lkRoom=null,lkMic=null,liveMode='voice';
 document.title='Live Chat | '+C.brand;
 $('brand-link').textContent=C.brand;$('brand-link').href=C.brandHref;
 $('avatar-img').src=C.image;
-$('chat-input').placeholder='Type to '+C.name+'...';
-$('chat-log').setAttribute('data-empty','Live Chat - type below or talk in Voice mode. '+C.name+"'s answers show here in full.");
+$('chat-input').placeholder='Type to Chat with '+C.name;
+$('chat-log').setAttribute('data-empty',C.name+"'s Chat Response");
 var HINTS={voice:'Voice: talk out loud. You can also type.',library:'Library: mic off, '+C.name+' whispers. Full answer shows as text.',silent:'Silent: mic off, sound off. Read '+C.name+"'s answer below."};
 
 function lkStatus(m){$('lk-status').textContent=m;}
