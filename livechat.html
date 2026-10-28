@@ -56,6 +56,7 @@ body.avatar-hidden #boring-bubble{position:static;transform:none;margin:0 auto;}
 #lib-vol{display:none;align-items:center;gap:8px;color:var(--muted);font-size:12px;margin:8px 4px 0;}
 body.mode-library #lib-vol{display:flex;}
 #lib-vol input{flex:1;accent-color:var(--purple);}
+lemon-slice-widget{display:none;}
 #lk-end{display:none;margin-top:10px;width:100%;padding:12px;border-radius:999px;border:none;background:#737a90;color:#7a0d0d;font-size:15px;font-weight:700;cursor:pointer;}
 /* Phones: card fills the screen */
 @media (max-width:420px){
@@ -85,7 +86,7 @@ body.live .lc-card{padding-top:calc(env(safe-area-inset-top) + 12px);}
     <button id="lk-end" type="button">End Chat</button>
   </div>
 </div>
-<script src="https://cdn.jsdelivr.net/npm/livekit-client@2/dist/livekit-client.umd.min.js"></script>
+<lemon-slice-widget id="ls-widget" agent-id="agent_150ea2643ffc45a6" inline="" custom-minimized-width="200" custom-minimized-height="300" custom-active-width="320" custom-active-height="520" video-button-color-opacity="0.88" show-minimize-button="true" initial-state="minimized"></lemon-slice-widget><script type="module" src="https://unpkg.com/@lemonsliceai/lemon-slice-widget"></script><script src="https://cdn.jsdelivr.net/npm/livekit-client@2/dist/livekit-client.umd.min.js"></script>
 <script>
 /* ===== Per-site settings: change these to reuse Live Chat on another site ===== */
 var LIVECHAT={
@@ -93,6 +94,7 @@ var LIVECHAT={
   brandHref:'/',
   name:'Ginger',                                 /* what the avatar is called in the UI (Buddy: 'Buddy') */
   image:'/assets/livechat/ginger-avatar-hero.jpg',  /* Buddy: /assets/livechat/buddy-avatar-cartoon.jpg */
+  lemonAgentId:'agent_150ea2643ffc45a6',          /* Lemon Slice avatar agent (Ginger) - same as buddyfetch.ai/ginger */
   room:'gingerv3-demo',                          /* Ginger's LiveKit room, same as buddyfetch.ai/ginger Fetch Mode (Buddy: buddy-demo) */
   tokenUrl:'https://www.buddyfetch.ai/api/start', /* same LiveKit token call buddyfetch.ai/ginger Fetch Mode uses (read-only, CORS open) */
   askUrl:'/api/library-ask',                     /* POST {message,history} -> {reply} */
@@ -108,7 +110,7 @@ function $(i){return document.getElementById(i);}
 var C=LIVECHAT,lkRoom=null,lkMic=null,liveMode='voice';
 document.title='Live Chat | '+C.brand;
 $('brand-link').textContent=C.brand;$('brand-link').href=C.brandHref;
-$('avatar-img').src=C.image;
+$('avatar-img').src=C.image;$('ls-widget').setAttribute('agent-id',C.lemonAgentId);
 $('chat-input').placeholder='Type to Chat with '+C.name;
 $('chat-log').setAttribute('data-empty',C.name+"'s Chat Response");
 var HINTS={voice:'Voice: talk out loud. You can also type.',library:'Library: mic off, '+C.name+' whispers. Full answer shows as text.',silent:'Silent: mic off, sound off. Read '+C.name+"'s answer below."};
@@ -129,7 +131,7 @@ function setAvatarHidden(h){document.body.classList.toggle('avatar-hidden',h);$(
 
 async function startLive(mode){if(typeof mode!=='string')mode='voice';
   document.body.classList.add('live');setMode(mode,true);if(lkRoom)return;
-  try{
+  try{var w=$('ls-widget');if(w){w.setAttribute('controlled-widget-state','minimized');}
     lkStatus('Getting a Live Chat token...');
     var r=await fetch(C.tokenUrl+'?room='+encodeURIComponent(C.room)+'&participant='+encodeURIComponent('visitor-'+Math.floor(Math.random()*1e5))+'&dispatch=0&t='+Date.now());
     var t=await r.json().catch(function(){return {};});
