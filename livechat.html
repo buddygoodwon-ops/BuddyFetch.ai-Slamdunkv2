@@ -94,7 +94,7 @@ var LIVECHAT={
   name:'Ginger',                                 /* what the avatar is called in the UI (Buddy: 'Buddy') */
   image:'/assets/livechat/ginger-avatar-hero.jpg',  /* Buddy: /assets/livechat/buddy-avatar-cartoon.jpg */
   room:'gingerv3-demo',                          /* Ginger's LiveKit room, same as buddyfetch.ai/ginger Fetch Mode (Buddy: buddy-demo) */
-  tokenUrl:'/api/avatar-start',                  /* returns {token,url} */
+  tokenUrl:'https://www.buddyfetch.ai/api/start', /* same LiveKit token call buddyfetch.ai/ginger Fetch Mode uses (read-only, CORS open) */
   askUrl:'/api/library-ask',                     /* POST {message,history} -> {reply} */
   dataTopic:'',                                  /* Ginger's bridge has no typed-text channel: typed chat goes straight to askUrl (Buddy: 'buddy-library') */
   dataReplyTopic:'buddy-library-transcript',     /* avatar's transcript comes back on this topic */
@@ -131,19 +131,22 @@ async function startLive(mode){if(typeof mode!=='string')mode='voice';
   document.body.classList.add('live');setMode(mode,true);if(lkRoom)return;
   try{
     lkStatus('Getting a Live Chat token...');
-    var r=await fetch(C.tokenUrl+'?room='+encodeURIComponent(C.room)+'&participant='+encodeURIComponent('livechat-'+Math.floor(Math.random()*1e5))+'&t='+Date.now());
+    var r=await fetch(C.tokenUrl+'?room='+encodeURIComponent(C.room)+'&participant='+encodeURIComponent('visitor-'+Math.floor(Math.random()*1e5))+'&dispatch=0&t='+Date.now());
     var t=await r.json().catch(function(){return {};});
     if(!r.ok||!t.token)throw new Error(t.error||('token HTTP '+r.status));
     lkStatus('Connecting to '+C.name+'...');
     lkRoom=new LivekitClient.Room({adaptiveStream:false,dynacast:false});
-    lkRoom.on(LivekitClient.RoomEvent.TrackSubscribed,function(track){if(track.kind==='video'){track.attach($('lk-video'));$('lk-video').play().catch(function(){});}else if(track.kind==='audio'){var a=track.attach();a.style.display='none';a.className='lk-audio';a.setAttribute('playsinline','');document.body.appendChild(a);applyVolume();}});
+    lkRoom.on(LivekitClient.RoomEvent.TrackSubscribed,function(track){if(track.kind==='video'){track.attach($('lk-video'));$('lk-video').play().catch(function(){});lkStatus('Connected - '+C.name+' is on.');}else if(track.kind==='audio'){var a=track.attach();a.style.display='none';a.className='lk-audio';a.setAttribute('playsinline','');document.body.appendChild(a);applyVolume();}});
     lkRoom.on(LivekitClient.RoomEvent.TrackUnsubscribed,function(track){if(track.kind==='video')track.detach();});
     lkRoom.on(LivekitClient.RoomEvent.DataReceived,onLiveData);
     lkRoom.on(LivekitClient.RoomEvent.Disconnected,function(){lkRoom=null;lkMic=null;document.body.classList.remove('live');$('lk-end').style.display='none';});
     await lkRoom.connect(t.url,t.token);
     try{await lkRoom.startAudio();}catch(e){}
-    applyVolume();if(liveMode==='voice'){await ensureMic();}
-    lkStatus('Connected - '+C.name+' is on.');
+    /* Same as /ginger: always publish the mic once connected - that's what brings the avatar bridge into the room.
+       In Library / Silent the mic is published muted. */
+    await ensureMic();if(liveMode!=='voice'){await muteMic();}
+    applyVolume();
+    if(!$('lk-video').videoWidth)lkStatus(C.name+' is joining - about 20 seconds...');
     $('lk-end').style.display='block';
   }catch(e){lkStatus('Could not connect: '+e.message+' - you can still type below.');$('lk-end').style.display='block';}}
 
