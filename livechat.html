@@ -98,7 +98,8 @@ var LIVECHAT={
   dataReplyTopic:'buddy-library-transcript',     /* avatar's transcript comes back on this topic */
   avatarWaitMs:12000                             /* if the live avatar doesn't answer in time, fall back to askUrl */,
   ambassadorUrl:'https://www.buddyfetch.ai/ginger',   /* Brand Ambassador button */
-  digitalDoubleUrl:'https://www.buddyfetch.ai/ilendgirl' /* Digital Double button */
+  digitalDoubleUrl:'https://www.buddyfetch.ai/ilendgirl', /* Digital Double button */
+  swipeSelfUrl:'https://www.buddyfetch.ai/slamdunk'    /* this page's place in the swipe cycle */
 };
 /* ============================================================================ */
 function $(i){return document.getElementById(i);}
@@ -177,5 +178,22 @@ $('chat-form').addEventListener('submit',async function(e){e.preventDefault();va
   if(!sent){askText(t);return;}
   waitTimer=setTimeout(function(){waitTimer=null;askText(t);},C.avatarWaitMs);});
 setMode('voice',true);
+
+/* ---- Swipe / arrow navigation (same cycle as slamdunk.html, Glenn 10/18) ----
+   left swipe (or ArrowLeft) = next page, right swipe (or ArrowRight) = previous page.
+   Cycle: Hey Ginger -> iLendGirl -> SlamDunk -> Hey Ginger ...  Home screen only (off during Live Chat). */
+(function(){
+  var ORDER=[C.ambassadorUrl,C.digitalDoubleUrl,C.swipeSelfUrl], SELF=2;
+  function go(dir){location.href=ORDER[(SELF+dir+ORDER.length)%ORDER.length];}
+  function active(){return !document.body.classList.contains('live');}
+  var sx=0,sy=0,tracking=false;
+  document.addEventListener('touchstart',function(e){if(!active())return;var t=e.touches[0];sx=t.clientX;sy=t.clientY;tracking=true;},{passive:true});
+  document.addEventListener('touchmove',function(e){if(tracking&&active()&&Math.abs(e.touches[0].clientX-sx)>10)e.preventDefault();},{passive:false});
+  document.addEventListener('touchend',function(e){if(!tracking)return;tracking=false;if(!active())return;
+    var t=e.changedTouches[0],dx=t.clientX-sx,dy=t.clientY-sy;
+    if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.4){go(dx<0?1:-1);}},{passive:true});
+  document.addEventListener('keydown',function(e){if(!active()||/INPUT|TEXTAREA/.test((e.target||{}).tagName||''))return;
+    if(e.key==='ArrowLeft')go(1);else if(e.key==='ArrowRight')go(-1);});
+})();
 </script>
 </body></html>
