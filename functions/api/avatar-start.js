@@ -11,6 +11,7 @@
 const START_ORIGIN = 'https://www.buddyfetch.ai';
 const ALLOWED_ROOMS = new Set([
   'gingerv3-demo', // Ginger (Kate Trulove) — Library Mode voice
+  'buddy-demo', // Buddy — Live Chat (livechat.html)
 ]);
 
 function json(data, status = 200) {
