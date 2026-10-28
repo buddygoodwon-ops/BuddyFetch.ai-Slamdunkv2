@@ -56,7 +56,7 @@ body.avatar-hidden #boring-bubble{position:static;transform:none;margin:0 auto;}
 #lib-vol{display:none;align-items:center;gap:8px;color:var(--muted);font-size:12px;margin:8px 4px 0;}
 body.mode-library #lib-vol{display:flex;}
 #lib-vol input{flex:1;accent-color:var(--purple);}
-lemon-slice-widget{display:none;}
+lemon-slice-widget{position:fixed!important;left:-12000px!important;top:0!important;width:320px;height:520px;opacity:0;pointer-events:none;}
 #lk-end{display:none;margin-top:10px;width:100%;padding:12px;border-radius:999px;border:none;background:#737a90;color:#7a0d0d;font-size:15px;font-weight:700;cursor:pointer;}
 /* Phones: card fills the screen */
 @media (max-width:420px){
@@ -94,6 +94,7 @@ var LIVECHAT={
   brandHref:'/',
   name:'Buddy',                                  /* what the avatar is called in the UI */
   image:'/assets/livechat/buddy-avatar-cartoon.jpg', /* Ginger: /assets/livechat/ginger-avatar-hero.jpg */
+  engine:'lemonslice',                           /* 'lemonslice' = avatar runs in LemonSlice (no PC bridge) | 'livekit' = bridge room (Ginger: ginger-demo) */
   lemonAgentId:'agent_70dc8e96528c845e',          /* LemonSlice "Buddy SlamDunk Technologies" (Ginger: agent_150ea2643ffc45a6) */
   room:'slamdunk-demo',                          /* Buddy SlamDunk bridge room - run-slamdunk-bridge.ps1 (Ginger: ginger-demo) */
   tokenUrl:'https://www.buddyfetch.ai/api/start', /* same LiveKit token call buddyfetch.ai/ginger Fetch Mode uses (read-only, CORS open) */
@@ -119,18 +120,47 @@ function lkStatus(m){$('lk-status').textContent=m;}
 function libVol(){return $('lib-vol-range').value/100;}
 function applyVolume(){var v=liveMode==='voice'?1:liveMode==='library'?libVol():0;
   document.querySelectorAll('audio.lk-audio').forEach(function(a){a.muted=(v===0);a.volume=v;});
-  try{if(lkRoom)lkRoom.remoteParticipants.forEach(function(p){if(p.setVolume)p.setVolume(v);});}catch(e){}}
+  try{if(lkRoom)lkRoom.remoteParticipants.forEach(function(p){if(p.setVolume)p.setVolume(v);});}catch(e){}
+  if(LS.on)lsVolume(v);}
 async function ensureMic(){if(!lkRoom)return;try{if(!lkMic){lkMic=await LivekitClient.createLocalAudioTrack();await lkRoom.localParticipant.publishTrack(lkMic);}else{await lkMic.unmute();}}catch(e){lkStatus('Mic not available: '+e.message);}}
 async function muteMic(){try{if(lkMic)await lkMic.mute();}catch(e){}}
+
+/* ---- LemonSlice engine: the working Buddy SlamDunk avatar (same widget as buddyfetch.ai/slamdunk), shown in our frame ---- */
+var LS={on:false,poll:null};
+function lsRoot(){var w=$('ls-widget');return w&&w.shadowRoot;}
+function lsButtons(){var r=lsRoot();return r?[].slice.call(r.querySelectorAll('button')):[];}
+function lsBtn(label){return lsButtons().filter(function(b){return b.getAttribute('aria-label')===label;})[0]||null;}
+function lsMicBtn(){return lsButtons().filter(function(b){return !b.getAttribute('aria-label')&&b.querySelector('svg');})[0]||null;}
+function lsMicOn(){var b=lsMicBtn();return !!(b&&!b.querySelector('.text-red-500'));}
+function lsSetMic(on){var b=lsMicBtn();if(b&&lsMicOn()!==on)b.click();}
+function lsVideo(){var r=lsRoot();if(!r)return null;var v=[].slice.call(r.querySelectorAll('video')).filter(function(x){return x.srcObject;});return v[0]||null;}
+function lsVolume(v){var r=lsRoot();if(!r)return;r.querySelectorAll('audio').forEach(function(a){a.muted=(v===0);a.volume=v;if(v>0&&a.paused&&a.srcObject)a.play().catch(function(){});});}
+function lsSend(text){var r=lsRoot();if(!r)return false;var ta=r.querySelector('textarea'),b=lsBtn('Send message');if(!ta||!b)return false;
+  Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype,'value').set.call(ta,text);ta.dispatchEvent(new Event('input',{bubbles:true}));
+  setTimeout(function(){b.click();},150);return true;}
+function lsStart(){var w=$('ls-widget');LS.on=true;w.setAttribute('controlled-widget-state','active');
+  lkStatus('Connecting to '+C.name+'...');$('lk-end').style.display='block';
+  var tries=0,clicked=false;clearInterval(LS.poll);
+  LS.poll=setInterval(function(){tries++;
+    if(!clicked){var m=lsMicBtn();if(m){m.click();clicked=true;lkStatus(C.name+' is joining...');}}  /* mic tap starts the live call */
+    var v=lsVideo();
+    if(v&&$('lk-video').srcObject!==v.srcObject){$('lk-video').srcObject=v.srcObject;$('lk-video').play().catch(function(){});lkStatus('Connected - '+C.name+' is on.');
+      setTimeout(function(){lsSetMic(liveMode==='voice');applyVolume();},800);}
+    if(v)applyVolume();
+    if(!v&&tries===60)lkStatus(C.name+' is taking a while - try End Chat and tap again.');},500);}
+function lsStop(){clearInterval(LS.poll);LS.on=false;var c=lsBtn('Close');if(c)c.click();$('ls-widget').setAttribute('controlled-widget-state','minimized');$('lk-video').srcObject=null;}
+
 
 function setMode(m,quiet){liveMode=m;document.body.classList.remove('mode-voice','mode-library','mode-silent');document.body.classList.add('mode-'+m);
   document.querySelectorAll('#mode-bar button').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-mode')===m);});
   $('mode-hint').textContent=HINTS[m];applyVolume();
+  if(LS.on)lsSetMic(m==='voice');
   if(m==='voice'){setAvatarHidden(false);ensureMic();}else{muteMic();if(!quiet)$('chat-input').focus();}}
 function setAvatarHidden(h){document.body.classList.toggle('avatar-hidden',h);$('boring-bubble').textContent=h?'Show Avatar':'Boring Mode / Hide Avatar';}
 
 async function startLive(mode){if(typeof mode!=='string')mode='voice';
-  document.body.classList.add('live');setMode(mode,true);if(lkRoom)return;
+  document.body.classList.add('live');setMode(mode,true);if(lkRoom||LS.on)return;
+  if(C.engine==='lemonslice'){lsStart();return;}
   try{var w=$('ls-widget');if(w){w.setAttribute('controlled-widget-state','minimized');}
     lkStatus('Getting a Live Chat token...');
     var r=await fetch(C.tokenUrl+'?room='+encodeURIComponent(C.room)+'&participant='+encodeURIComponent('visitor-'+Math.floor(Math.random()*1e5))+'&dispatch=0&t='+Date.now());
@@ -156,8 +186,8 @@ async function startLive(mode){if(typeof mode!=='string')mode='voice';
 $('avatar-img').addEventListener('click',function(){startLive('voice');});
 $('yap-pill').addEventListener('click',function(){startLive('voice');});
 $('btn-ambassador').href=C.ambassadorUrl;$('btn-double').href=C.digitalDoubleUrl;
-$('lk-end').addEventListener('click',async function(){if(lkRoom){await lkRoom.disconnect();lkRoom=null;}document.body.classList.remove('live');});
-document.querySelectorAll('#mode-bar button').forEach(function(b){b.addEventListener('click',function(){var m=b.getAttribute('data-mode');setMode(m);if(!lkRoom)startLive(m);});});
+$('lk-end').addEventListener('click',async function(){if(LS.on)lsStop();if(lkRoom){await lkRoom.disconnect();lkRoom=null;}document.body.classList.remove('live');$('lk-end').style.display='none';});
+document.querySelectorAll('#mode-bar button').forEach(function(b){b.addEventListener('click',function(){var m=b.getAttribute('data-mode');setMode(m);if(!lkRoom&&!LS.on)startLive(m);});});
 $('lib-vol-range').addEventListener('input',applyVolume);
 $('boring-bubble').addEventListener('click',function(){setAvatarHidden(!document.body.classList.contains('avatar-hidden'));});
 
@@ -181,6 +211,7 @@ async function askText(t){if(pendingEl)pendingEl.textContent=C.name+' is typing.
 $('chat-form').addEventListener('submit',async function(e){e.preventDefault();var t=$('chat-input').value.trim();if(!t)return;
   $('chat-input').value='';lastTyped=t;lastBot=null;addMsg('chat-you',t);
   clearWait();$('chat-send').disabled=true;pendingEl=addMsg('chat-pending',C.name+' is fetching...');
+  if(LS.on)lsSend(t);
   var sent=false;if(lkRoom&&lkRoom.state==='connected'&&C.dataTopic){try{await lkRoom.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({text:t})),{reliable:true,topic:C.dataTopic});sent=true;}catch(err){}}
   if(!sent){askText(t);return;}
   waitTimer=setTimeout(function(){waitTimer=null;askText(t);},C.avatarWaitMs);});
