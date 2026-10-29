@@ -12,8 +12,8 @@
 const PERSONAS = {
   slamdunk: { assistant: '74e74f38-c879-43dd-8f8c-4e0466fd2317', page: 'buddyfetch.ai/slamdunk' },  // SlamDunk Technologies Chat Agent
   lorne:    { assistant: 'f17d5e8f-ef94-4721-87c6-b2f529e3d3e0', page: 'buddyfetch.ai/YoLorne' },   // Lorne Goodwon BRM Property Management
-  slash:    { assistant: '', page: 'buddyfetch.ai/SupSlash' },      // set when the Slash Goodwon assistant exists
-  destiny:  { assistant: '', page: 'buddyfetch.ai/HeyHeyDestiny' }, // set when the Destiny Trulove assistant exists
+  slash:    { assistant: '21e0d8ce-2326-421b-a518-aea245007e54', page: 'buddyfetch.ai/SupSlash' },      // Slash Goodwon ABL Superhero
+  destiny:  { assistant: '97061722-64c1-42f9-8563-b56cf2cd02b2', page: 'buddyfetch.ai/HeyHeyDestiny' }, // Destiny Trulove ABL Superhero
 };
 
 // Phone-only tools must never be offered in a typed/web channel.
